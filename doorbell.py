@@ -1,23 +1,18 @@
 from time import gmtime, strftime, sleep
 from datetime import datetime
+from slacker import Slacker
+
 import RPi.GPIO as GPIO
 import os
 import subprocess
 import os.path
 import httplib, urllib
-import pysftp
 import atexit
 import traceback
 import logging
 import time
 
-import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.Utils import COMMASPACE, formatdate
-from email import Encoders
-
+# On exit
 def exit_handler():
     GPIO.output(22, False)
 atexit.register(exit_handler)
@@ -46,13 +41,17 @@ GPIO.output(15, False)
 GPIO.output(22, True)
 GPIO.setup(11, GPIO.IN)
 
+# Camera for Homebridge
+cmdCamHomebridge='sudo modprobe bcm2835-v4l2'
+subprocess.call(cmdCamHomebridge, shell=True)
+
 # Loop
 while 1:
     if not (GPIO.input(11)):
         try:
             time.sleep(0.01)
             if not (GPIO.input(11)):
-            
+
                 # Setup
                 now=strftime("%Y-%m-%d %H:%M:%S", gmtime())
                 filename=strftime("%Y-%m-%d_%H.%M.%S", gmtime())  + '.jpg'
@@ -60,40 +59,27 @@ while 1:
                 print(now + " Button pressed")
                 logger.info("Button pressed")
                 GPIO.output( 15, True)
-        
+
                 # Audio
                 print("--> Audio")
                 logger.info("--> Audio")
                 subprocess.Popen(['aplay', '/home/pi/Desktop/doorbell/ringtone.wav'])
-        
+
                 # Camera
                 print("--> Camera")
                 logger.info("--> Camera")
-                fullfilename = '/home/pi/Desktop/doorbell/web/photos/' +  filename
-                cmdCam='raspistill -o ' + fullfilename
+                cmdCam='raspistill -q 10 -o ' + '/home/pi/Desktop/doorbell/web/photos/' +  filename
                 subprocess.call(cmdCam, shell=True)
-        
-                # Pushover
-                print("--> Pushover")
-                logger.info("--> Pushover")
-                conn = httplib.HTTPSConnection("api.pushover.net:443")
-                conn.request("POST", "/1/messages.json",
-                             urllib.urlencode({
-                                              "token": "myToken",
-                                              "user": "myUser",
-                                              "title": "Doorbell",
-                                              "message": "KNOCK KNOCK",
-                                              "url": "http://example.com/photos/" + filename,
-                                              "url_title": "Image",
-                                              }),
-                             { "Content-type": "application/x-www-form-urlencoded" })
-                conn.getresponse()
+
+                # Slack
+                slack = Slacker('api-key')
+                slack.files.upload('/home/pi/Desktop/doorbell/web/photos/' +  filename, title=now, channels='#doorbell')
 
                 # Finished
                 print("--> Finished")
                 logger.info("--> Finished")
-                time.sleep(2)
-    
+                time.sleep(1)
+
         except Exception, e:
             traceback.print_exc()
             logging.exception("!!!")
