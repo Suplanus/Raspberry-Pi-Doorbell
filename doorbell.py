@@ -1,6 +1,6 @@
 from time import gmtime, strftime, sleep
 from datetime import datetime
-from slacker import Slacker
+import requests
 
 import RPi.GPIO as GPIO
 import os
@@ -71,9 +71,16 @@ while 1:
                 cmdCam='raspistill -q 10 -o ' + '/home/pi/Desktop/doorbell/web/photos/' +  filename
                 subprocess.call(cmdCam, shell=True)
 
-                # Slack
-                slack = Slacker('api-key')
-                slack.files.upload('/home/pi/Desktop/doorbell/web/photos/' +  filename, title=now, channels='#doorbell')
+                # Pushover
+                r = requests.post("https://api.pushover.net/1/messages.json", data = {
+                  "token": "-- API Token --",
+                  "user": "-- User Key --",
+                  "message": "Knock Knock Knock"
+                },
+                files = {
+                  "attachment": ("image.jpg", open('/home/pi/Desktop/doorbell/web/photos/' +  filename, "rb"), "image/jpeg")
+                })
+                print(r.text)
 
                 # Finished
                 print("--> Finished")
