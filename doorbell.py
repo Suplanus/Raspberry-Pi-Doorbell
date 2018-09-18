@@ -1,7 +1,6 @@
 from time import gmtime, strftime, sleep
 from datetime import datetime
 import requests
-
 import RPi.GPIO as GPIO
 import os
 import subprocess
@@ -28,10 +27,6 @@ logger.setLevel(logging.INFO)
 # Start
 print(strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " Doorbell started")
 logger.info("Doorbell started")
-
-# Volume
-cmdVolume='amixer set PCM -- 1000'
-subprocess.call(cmdVolume, shell=True)
 
 # Pins
 GPIO.setmode(GPIO.BOARD)
@@ -73,8 +68,8 @@ while 1:
 
                 # Pushover
                 r = requests.post("https://api.pushover.net/1/messages.json", data = {
-                  "token": "-- API Token --",
-                  "user": "-- User Key --",
+                  "token": "myToken",
+                  "user": "myUser",
                   "message": "Knock Knock Knock"
                 },
                 files = {
