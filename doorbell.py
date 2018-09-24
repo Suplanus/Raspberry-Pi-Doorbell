@@ -1,6 +1,7 @@
 from time import gmtime, strftime, sleep
 from datetime import datetime
 import requests
+
 import RPi.GPIO as GPIO
 import os
 import subprocess
@@ -13,8 +14,8 @@ import time
 
 # On exit
 def exit_handler():
-    GPIO.output(22, False)
-atexit.register(exit_handler)
+  GPIO.output(22, False)
+  atexit.register(exit_handler)
 
 # Logging
 logger = logging.getLogger('doorbell')
@@ -42,48 +43,52 @@ subprocess.call(cmdCamHomebridge, shell=True)
 
 # Loop
 while 1:
-    if not (GPIO.input(11)):
-        try:
-            time.sleep(0.01)
-            if not (GPIO.input(11)):
+  if not (GPIO.input(11)):
+    try:
+        time.sleep(0.01)
+        if not (GPIO.input(11)):
 
-                # Setup
-                now=strftime("%Y-%m-%d %H:%M:%S", gmtime())
-                filename=strftime("%Y-%m-%d_%H.%M.%S", gmtime())  + '.jpg'
+            # Setup
+            now=strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            filename=strftime("%Y-%m-%d_%H.%M.%S", gmtime())  + '.jpg'
 
-                print(now + " Button pressed")
-                logger.info("Button pressed")
-                GPIO.output( 15, True)
+            print(now + " Button pressed")
+            logger.info("Button pressed")
+            GPIO.output( 15, True)
 
-                # Audio
+            # Audio
+            try:
                 print("--> Audio")
                 logger.info("--> Audio")
                 subprocess.Popen(['aplay', '/home/pi/Desktop/doorbell/ringtone.wav'])
+            except Exception, e:
+                traceback.print_exc()
+                logging.exception("!!!")
 
-                # Camera
-                print("--> Camera")
-                logger.info("--> Camera")
-                cmdCam='raspistill -q 10 -o ' + '/home/pi/Desktop/doorbell/web/photos/' +  filename
-                subprocess.call(cmdCam, shell=True)
+            # Camera
+            print("--> Camera")
+            logger.info("--> Camera")
+            cmdCam='raspistill -q 10 -o ' + '/home/pi/Desktop/doorbell/web/photos/' +  filename
+            subprocess.call(cmdCam, shell=True)
 
-                # Pushover
-                r = requests.post("https://api.pushover.net/1/messages.json", data = {
-                  "token": "myToken",
-                  "user": "myUser",
-                  "message": "Knock Knock Knock"
-                },
-                files = {
-                  "attachment": ("image.jpg", open('/home/pi/Desktop/doorbell/web/photos/' +  filename, "rb"), "image/jpeg")
-                })
-                print(r.text)
+            # Pushover
+            r = requests.post("https://api.pushover.net/1/messages.json", data = {
+              "token": "myToken",
+              "user": "myUser",
+              "message": "Knock Knock Knock"
+            },
+            files = {
+              "attachment": ("image.jpg", open('/home/pi/Desktop/doorbell/web/photos/' +  filename, "rb"), "image/jpeg")
+            })
+            print(r.text)
 
-                # Finished
-                print("--> Finished")
-                logger.info("--> Finished")
-                time.sleep(1)
+            # Finished
+            print("--> Finished")
+            logger.info("--> Finished")
+            time.sleep(1)
 
-        except Exception, e:
-            traceback.print_exc()
-            logging.exception("!!!")
-    else:
-        GPIO.output( 15, False)
+    except Exception, e:
+        traceback.print_exc()
+        logging.exception("!!!")
+  else:
+    GPIO.output( 15, False)
