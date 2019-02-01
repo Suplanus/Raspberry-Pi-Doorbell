@@ -6,17 +6,12 @@ A simple doorbell written in python. Makes a photo and send a push notification 
 - Edit `myToken` and `myUser` with your credentials in the `doorbell.py`
 
 ## Autostart
+Ohne sudo!
 
 ```shell
-sudo nano .config/autostart/doorbell.desktop
+crontab -e
 ```
-
-```
-[Desktop Entry]
-Version=1.0
-Type=Application
-StartupNotify=true
-Name=Doorbell
-Terminal=true
-Exec=sudo su pi -c "python Desktop/doorbell/doorbell.py"
+Am Ende einfügen:
+```shell
+@reboot sudo python Desktop/doorbell/doorbell.py
 ```
