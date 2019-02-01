@@ -33,7 +33,7 @@ logger.info("Doorbell started")
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(15, GPIO.OUT)
 GPIO.setup(22, GPIO.OUT)
-GPIO.output(15, False)
+GPIO.output(15, True)
 GPIO.output(22, True)
 GPIO.setup(11, GPIO.IN)
 
@@ -54,16 +54,7 @@ while 1:
 
             print(now + " Button pressed")
             logger.info("Button pressed")
-            GPIO.output( 15, True)
-
-            # Audio
-            try:
-                print("--> Audio")
-                logger.info("--> Audio")
-                subprocess.Popen(['aplay', '/home/pi/Desktop/doorbell/ringtone.wav'])
-            except Exception, e:
-                traceback.print_exc()
-                logging.exception("!!!")
+            GPIO.output( 15, False)
 
             # Camera
             print("--> Camera")
@@ -91,4 +82,4 @@ while 1:
         traceback.print_exc()
         logging.exception("!!!")
   else:
-    GPIO.output( 15, False)
+    GPIO.output( 15, True)
