@@ -1,7 +1,8 @@
 from time import gmtime, strftime, sleep
 from datetime import datetime
-import requests
+from picamera import PiCamera
 
+import requests
 import RPi.GPIO as GPIO
 import os
 import subprocess
@@ -40,6 +41,7 @@ GPIO.setup(11, GPIO.IN)
 # Camera for Homebridge
 cmdCamHomebridge='sudo modprobe bcm2835-v4l2'
 subprocess.call(cmdCamHomebridge, shell=True)
+camera = PiCamera()
 
 # Loop
 while 1:
@@ -59,10 +61,11 @@ while 1:
             # Camera
             print("--> Camera")
             logger.info("--> Camera")
-            cmdCam='raspistill -q 10 -o ' + '/home/pi/Desktop/doorbell/web/photos/' +  filename
-            subprocess.call(cmdCam, shell=True)
+            camera.capture('/home/pi/Desktop/doorbell/web/photos/' +  filename)
 
             # Pushover
+            print("--> Push")
+            logger.info("--> Push")
             r = requests.post("https://api.pushover.net/1/messages.json", data = {
               "token": "myToken",
               "user": "myUser",
@@ -79,6 +82,7 @@ while 1:
             time.sleep(1)
 
     except Exception, e:
+        logger.info(e)
         traceback.print_exc()
         logging.exception("!!!")
   else:
